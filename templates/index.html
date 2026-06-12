@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2>{% if current_user.role == 'admin' %}Admin Dashboard — Student Details{% else %}{{ current_user.username|upper }}{% endif %}</h2>
+    {% if current_user.role == 'admin' %}
+      <p class="text-muted mb-0">Here are all registered students and their usernames.</p>
+    {% endif %}
+  </div>
+  {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('new_student') }}" class="btn btn-primary">Add Student</a>
+  {% endif %}
+</div>
+
+{% if current_user.role == 'admin' %}
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">Students</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="marks-tab" data-bs-toggle="tab" data-bs-target="#marks" type="button" role="tab">Marks & Ranks</button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="students" role="tabpanel">
+      {% if student_summaries %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Owner</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for summary in student_list %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ summary.student.user.username if summary.student.user else summary.student.name }}</td>
+            <td>{{ summary.student.email }}</td>
+            <td>{{ summary.student.user.username if summary.student.user else 'N/A' }}</td>
+            <td>
+              <a href="{{ url_for('view_student', id=summary.student.id) }}" class="btn btn-sm btn-info">View Profile</a>
+              <a href="{{ url_for('edit_student', id=summary.student.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+              <form action="{{ url_for('delete_student', id=summary.student.id) }}" method="post" style="display:inline">
+                <button class="btn btn-sm btn-danger" onclick="return confirm('Delete student?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info">
+        No students are registered yet. Use the Add Student button to register the first student.
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="marks" role="tabpanel">
+      {% if student_summaries %}
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            {% for subject in subjects %}
+            <th>{{ subject }}</th>
+            {% endfor %}
+            <th>Total</th>
+            <th>Percentage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for summary in student_summaries %}
+          <tr>
+            <td>{{ summary.rank }}</td>
+            <td>{{ summary.student.name }}</td>
+            {% for subject in subjects %}
+            <td>{{ summary.marks[subject] if summary.marks[subject] is not none else '' }}</td>
+            {% endfor %}
+            <td>{{ summary.total }}</td>
+            <td>{{ '%.2f' | format(summary.percentage) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info">
+        No marks have been entered yet.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+{% elif student %}
+  <div class="card mb-3">
+    <div class="card-header">
+      Marks Sheet
+    </div>
+    <div class="card-body">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for subject in subjects %}
+          <tr>
+            <td>{{ subject }}</td>
+            <td>{{ summary.marks[subject] if summary and summary.marks[subject] is not none else '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p><strong>Total:</strong> {{ summary.total if summary else 0 }}</p>
+      <p><strong>Percentage:</strong> {{ '%.2f' | format(summary.percentage) if summary else '0.00' }}%</p>
+      <p><strong>Rank:</strong> {{ summary.rank if summary else 'N/A' }}</p>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    No record found
+  </div>
+{% endif %}
+{% endblock %}
