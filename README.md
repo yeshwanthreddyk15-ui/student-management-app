@@ -71,6 +71,4 @@ http://127.0.0.1:5000
 
 Find the project and other work on GitHub:
 
-`https://github.com/<your-github-username>`
-
-Replace `<your-github-username>` with your actual GitHub username.
+`https://github.com/yeshwanthreddyk15-ui`
